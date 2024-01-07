@@ -20,7 +20,7 @@ namespace AndroidSideloader
     {
         public static List<string> RemotesList = new List<string>();
 
-        public static string RcloneGamesFolder = "Quest Games";
+        public static string RcloneGamesFolder = Path.Combine(Environment.CurrentDirectory, "Quest Games");
 
         //This shit sucks but i'll switch to programatically adding indexes from the gamelist txt sometimes maybe
 
@@ -41,9 +41,9 @@ namespace AndroidSideloader
          */
         public static List<string[]> games = new List<string[]>();
 
-        public static string Nouns = Environment.CurrentDirectory + "\\nouns";
-        public static string ThumbnailsFolder = Environment.CurrentDirectory + "\\thumbnails";
-        public static string NotesFolder = Environment.CurrentDirectory + "\\notes";
+        public static string Nouns = Path.Combine(Environment.CurrentDirectory, "nouns");
+        public static string ThumbnailsFolder = Path.Combine(Environment.CurrentDirectory, "thumbnails");
+        public static string NotesFolder = Path.Combine(Environment.CurrentDirectory, "notes");
 
         // Downloader
         public static WebClient Webclient = new WebClient();
@@ -78,7 +78,8 @@ namespace AndroidSideloader
             try
             {
                 _ = Logger.Log($"Extracting Metadata");
-                Zip.ExtractFile($"{Environment.CurrentDirectory}\\meta.7z", $"{Environment.CurrentDirectory}\\meta",
+                
+                Zip.ExtractFile(Path.Combine(Environment.CurrentDirectory, "meta.7z"), Path.Combine(Environment.CurrentDirectory, "meta"),
                     MainForm.PublicConfigFile.Password);
 
                 _ = Logger.Log($"Updating Metadata");
@@ -98,12 +99,13 @@ namespace AndroidSideloader
                     Directory.Delete(NotesFolder, true);
                 }
 
-                Directory.Move($"{Environment.CurrentDirectory}\\meta\\.meta\\nouns", Nouns);
-                Directory.Move($"{Environment.CurrentDirectory}\\meta\\.meta\\thumbnails", ThumbnailsFolder);
-                Directory.Move($"{Environment.CurrentDirectory}\\meta\\.meta\\notes", NotesFolder);
+                Directory.Move(Path.Combine(Environment.CurrentDirectory, "meta", ".meta", "nouns"), Nouns);
+                Directory.Move(Path.Combine(Environment.CurrentDirectory, "meta", ".meta", "thumbnails"), ThumbnailsFolder);
+                Directory.Move(Path.Combine(Environment.CurrentDirectory, "meta", ".meta", "notes"), NotesFolder);
+
 
                 _ = Logger.Log($"Initializing Games List");
-                string gameList = File.ReadAllText($"{Environment.CurrentDirectory}\\meta\\VRP-GameList.txt");
+                string gameList = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "meta", "VRP-GameList.txt"));
 
                 string[] splitList = gameList.Split('\n');
                 splitList = splitList.Skip(1).ToArray();
@@ -115,8 +117,7 @@ namespace AndroidSideloader
                         games.Add(splitGame);
                     }
                 }
-
-                Directory.Delete($"{Environment.CurrentDirectory}\\meta", true);
+                Directory.Delete(Path.Combine(Environment.CurrentDirectory, "meta"), true);
             }
             catch (Exception e)
             {
