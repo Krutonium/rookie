@@ -249,6 +249,17 @@ namespace AndroidSideloader
                         Directory.Delete($@"{Path.GetPathRoot(Environment.SystemDirectory)}\RSL\EBWebView", true);
                     }
                 }
+                else
+                {
+                    var result = FlexibleMessageBox.Show(Program.form, "Would you like to use the public config? If you're a sponsor, click No.", "Use Public Config?", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if(result == DialogResult.Yes)
+                    {
+                        SideloaderRCLONE.updatePublicConfig();
+                        //Restart Application
+                        Application.Restart();
+                    }
+                  
+                }
             }
 
             // download dependencies

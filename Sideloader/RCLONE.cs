@@ -45,6 +45,8 @@ namespace AndroidSideloader
         public static string ThumbnailsFolder = Environment.CurrentDirectory + "\\thumbnails";
         public static string NotesFolder = Environment.CurrentDirectory + "\\notes";
 
+        // Downloader
+        public static WebClient Webclient = new WebClient();
         public static void UpdateNouns(string remote)
         {
             _ = Logger.Log($"Updating Nouns");
@@ -172,95 +174,41 @@ namespace AndroidSideloader
 
         public static void updateDownloadConfig()
         {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
-                                                 | SecurityProtocolType.Tls11
-                                                 | SecurityProtocolType.Tls12
-                                                 | SecurityProtocolType.Ssl3;
             _ = Logger.Log($"Attempting to Update Download Config");
             try
             {
                 string configUrl = "https://vrpirates.wiki/downloads/vrp.download.config";
-
-                HttpWebRequest getUrl = (HttpWebRequest)WebRequest.Create(configUrl);
-                using (StreamReader responseReader = new StreamReader(getUrl.GetResponse().GetResponseStream()))
+                string saveLocation = Path.Combine(Environment.CurrentDirectory, "rclone", "vrp.download.config");
+                
+                //Delete file if it already exists. The original code downloaded it, checked if it matched, and threw it away if it did;
+                //I'm just going to delete it and download fresh, there's no point in doing the comparison, it's more work.
+                if (File.Exists(saveLocation))
                 {
-                    string resultString = responseReader.ReadToEnd();
-
-                    _ = Logger.Log($"Retrieved updated config from: {configUrl}");
-
-                    if (File.Exists(Environment.CurrentDirectory + "\\rclone\\vrp.download.config_new"))
-                    {
-                        File.Delete(Environment.CurrentDirectory + "\\rclone\\vrp.download.config_new");
-                    }
-
-                    File.Create(Environment.CurrentDirectory + "\\rclone\\vrp.download.config_new").Close();
-                    File.WriteAllText(Environment.CurrentDirectory + "\\rclone\\vrp.download.config_new", resultString);
-
-                    if (!File.Exists(Environment.CurrentDirectory + "\\rclone\\hash.txt"))
-                    {
-                        File.Create(Environment.CurrentDirectory + "\\rclone\\hash.txt").Close();
-                    }
-
-                    string newConfig = CalculateMD5(Environment.CurrentDirectory + "\\rclone\\vrp.download.config_new");
-                    string oldConfig = File.ReadAllText(Environment.CurrentDirectory + "\\rclone\\hash.txt");
-
-                    if (!File.Exists(Environment.CurrentDirectory + "\\rclone\\vrp.download.config"))
-                    {
-                        oldConfig = "Config Doesnt Exist!";
-                    }
-
-                    _ = Logger.Log($"Online Config Hash: {newConfig}; Local Config Hash: {oldConfig}");
-
-                    if (newConfig != oldConfig)
-                    {
-                        _ = Logger.Log($"Updated Config Hash is different than the current Config. Updating Configuration File.");
-
-                        if (File.Exists(Environment.CurrentDirectory + "\\rclone\\vrp.download.config"))
-                        {
-                            File.Delete(Environment.CurrentDirectory + "\\rclone\\vrp.download.config");
-                        }
-
-                        File.Move(Environment.CurrentDirectory + "\\rclone\\vrp.download.config_new", Environment.CurrentDirectory + "\\rclone\\vrp.download.config");
-
-                        File.WriteAllText(Environment.CurrentDirectory + "\\rclone\\hash.txt", string.Empty);
-                        File.WriteAllText(Environment.CurrentDirectory + "\\rclone\\hash.txt", newConfig);
-                    }
-                    else
-                    {
-                        _ = Logger.Log($"Updated Config Hash matches last download. Not updating.");
-
-                        if (File.Exists(Environment.CurrentDirectory + "\\rclone\\vrp.download.config_new"))
-                        {
-                            File.Delete(Environment.CurrentDirectory + "\\rclone\\vrp.download.config_new");
-                        }
-                    }
+                    File.Delete(saveLocation);
                 }
+                File.WriteAllText(saveLocation, Webclient.DownloadString(configUrl));
+                _ = Logger.Log($"Retrieved updated config from: {configUrl}");
             }
-            catch { }
+            //Catch
+            catch (Exception e)
+            {
+                _ = Logger.Log($"Failed to update Download config: {e.Message}", LogLevel.ERROR);
+            }
         }
 
         public static void updateUploadConfig()
         {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
-                                                 | SecurityProtocolType.Tls11
-                                                 | SecurityProtocolType.Tls12
-                                                 | SecurityProtocolType.Ssl3;
             _ = Logger.Log($"Attempting to Update Upload Config");
             try
             {
                 string configUrl = "https://vrpirates.wiki/downloads/vrp.upload.config";
-
-                HttpWebRequest getUrl = (HttpWebRequest)WebRequest.Create(configUrl);
-                using (StreamReader responseReader = new StreamReader(getUrl.GetResponse().GetResponseStream()))
+                string saveLocation = Path.Combine(Environment.CurrentDirectory, "rclone", "vrp.upload.config");
+                if(File.Exists(saveLocation))
                 {
-                    string resultString = responseReader.ReadToEnd();
-
-                    _ = Logger.Log($"Retrieved updated config from: {configUrl}");
-
-                    File.WriteAllText(Environment.CurrentDirectory + "\\rclone\\vrp.upload.config", resultString);
-
-                    _ = Logger.Log("Upload config updated successfully.");
+                    File.Delete(saveLocation);
                 }
+                File.WriteAllText(saveLocation, Webclient.DownloadString(configUrl));
+                _ = Logger.Log($"Retrieved updated config from: {configUrl}");
             }
             catch (Exception e)
             {
@@ -270,26 +218,13 @@ namespace AndroidSideloader
 
         public static void updatePublicConfig()
         {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
-                                                 | SecurityProtocolType.Tls11
-                                                 | SecurityProtocolType.Tls12
-                                                 | SecurityProtocolType.Ssl3;
             _ = Logger.Log($"Attempting to Update Public Config");
             try
             {
                 string configUrl = "https://vrpirates.wiki/downloads/vrp-public.json";
-
-                HttpWebRequest getUrl = (HttpWebRequest)WebRequest.Create(configUrl);
-                using (StreamReader responseReader = new StreamReader(getUrl.GetResponse().GetResponseStream()))
-                {
-                    string resultString = responseReader.ReadToEnd();
-
-                    _ = Logger.Log($"Retrieved updated config from: {configUrl}");
-
-                    File.WriteAllText(Environment.CurrentDirectory + "\\vrp-public.json", resultString);
-
-                    _ = Logger.Log("Public config updated successfully.");
-                }
+                string saveLocation = Path.Combine(Environment.CurrentDirectory, "vrp-public.json");
+                File.WriteAllText(saveLocation, Webclient.DownloadString(configUrl));
+                _ = Logger.Log($"Retrieved and updated public config from: {configUrl}");
             }
             catch (Exception e)
             {
