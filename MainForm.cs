@@ -2367,7 +2367,8 @@ namespace AndroidSideloader
                     {
                         ShowError_QuotaExceeded();
 
-                        DialogResult om = MessageBox.Show("Relaunch Rookie in Offline Mode?", "Offline Mode?", MessageBoxButtons.YesNo);
+                        DialogResult om = FlexibleMessageBox.Show("Relaunch Rookie in Offline Mode?", "Offline Mode?", MessageBoxButtons.YesNo);
+
                         if (om == DialogResult.Yes)
                         {
                             Process pr = new Process();
